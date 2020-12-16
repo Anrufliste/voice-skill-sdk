@@ -88,6 +88,11 @@ class TestSkillGenerator(unittest.TestCase):
             data = read_config(pathlib.Path('file'))
             self.assertEqual(data, dict(hello='Hello'))
 
+    def test_check_msgfmt(self):
+        from skill_generator.__main__ import check_msgfmt
+        with patch('subprocess.check_output', side_effect=subprocess.CalledProcessError(-1, "test")):
+            check_msgfmt()
+
     def test_prompt_overwrite(self):
         from skill_generator.__main__ import prompt_overwrite
         with patch.object(pathlib.Path, 'exists', return_value=False):

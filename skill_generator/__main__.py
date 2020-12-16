@@ -57,6 +57,20 @@ def prompt_overwrite(skill_dir: Path) -> bool:
     return confirm
 
 
+def check_msgfmt():
+    """
+    Check presence of "msgfmt" utility and give a warning not present
+
+    @return:
+    """
+    try:
+        subprocess.check_output(['msgfmt', '--version'])
+    except subprocess.CalledProcessError:
+        click.secho(f'Could not find "msgfmt" utility, you will not be able to compile locale files.\n'
+                    f'Make sure [GNU gettext] (https://www.gnu.org/software/gettext/) is installed',
+                    fg='yellow')
+
+
 def validate(context: dict) -> dict:
     """ Validate domain context metadata
 
@@ -198,6 +212,9 @@ def venv_main(name: str, language: str, out: str, metadata: Optional[io.Buffered
     subprocess.check_call((str(python), '-m', 'pip', 'install', '-e', str(HERE.parent)), stderr=stdout, stdout=stdout)
 
     venv_time = time.time() - start
+
+    # Double check gettext installation
+    check_msgfmt()
 
     if verbose:
         click.secho(f'Timing: cookiecutter took {round(cookies_time, 2)} sec, '
