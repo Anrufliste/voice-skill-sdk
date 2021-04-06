@@ -40,7 +40,7 @@ class ListSection(CamelModel):
     List section in a Card
     """
 
-    title: Text
+    title: Optional[Text] = None
     items: List[ListItem]
 
     def __init__(self, title: Text, items: List[ListItem]):
