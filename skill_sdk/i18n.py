@@ -132,10 +132,12 @@ class Message(str):
         """
         if isinstance(other, Message):
             value = self.value + other.value
+            key = self.key + " " + other.key
             args = self.args + other.args
             kwargs = {**self.kwargs, **other.kwargs}
         else:
             value = self.value + other
+            key = self.key + other
             args, kwargs = self.args, self.kwargs
 
         return Message(value, self.key, *args, **kwargs)
