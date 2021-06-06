@@ -84,6 +84,7 @@ class TranslationError(Exception):
 MESSAGE_KEY_SEPARATORS = [" ", ".", ";", ",", "!", "?", "|"]
 MESSAGE_KEY_DEFAULT_SEPARATOR = " "
 
+
 class Message(str):
     """String object that encapsulates formatting parameters"""
 
