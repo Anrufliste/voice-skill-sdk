@@ -43,7 +43,7 @@ setup(
         "skill_sdk.ui": ["css/*", "js/*", "templates/*"],
     },
     install_requires=[
-        "fastapi==0.65.0",
+        "fastapi==0.65.1",
         "pydantic>=1.8,<2.0.0",
         "starlette_context",
         "python-dateutil",
@@ -58,6 +58,7 @@ setup(
     ],
     extras_require={
         "dev": [
+            "gunicorn",
             "starlette[full]",
             "mypy",
             "respx",

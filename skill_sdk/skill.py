@@ -117,6 +117,13 @@ class Skill(FastAPI):
 
         return self
 
+    def develop(self):
+        """Init development mode: load Designer UI"""
+        from skill_sdk import ui
+
+        ui.setup(self)
+        return self
+
     @staticmethod
     def __register(
         intent: Text,
@@ -204,7 +211,27 @@ class Skill(FastAPI):
                 '"module" property is only available in DEVELOPMENT mode.'
             ) from None
 
-    def close(self):
+    def reload(self, app_str: Text = "") -> "Skill":
+        self.close()
+
+        logger.info(
+            "Reloading %s from %s",
+            repr(app_str) if app_str else "default app",
+            repr(self.module),
+        )
+        util.reload_recursive(self.module)
+
+        # Get intents and handlers from the application object,
+        # if not supplied, the default app is self anyway
+        app: Skill = getattr(self.module, app_str, None)
+        if app is not None:
+            self.intents = app.intents
+
+        logger.info("Loaded handlers: %s", list(self.intents))
+        return self
+
+    @staticmethod
+    def close():
         """
         Cleanup: Skill.__intents is static to enable backward-compatible "@intent_handler" decorators,
         that are not bound to a skill instance (yet).
@@ -220,10 +247,12 @@ class Skill(FastAPI):
 
         """
 
-        self.__intents.clear()
+        Skill.__intents.clear()
 
 
-def init_app(config_path: Text = None, develop: bool = None) -> Skill:
+def init_app(
+    config_path: Text = None, develop: bool = None, configure_logging: bool = None
+) -> Skill:
     """
     Create FastAPI application from configuration file
 
@@ -231,12 +260,20 @@ def init_app(config_path: Text = None, develop: bool = None) -> Skill:
     so any FastAPI initialization parameters, like `debug`, `title`, `description`, `version` can be used
 
     :param config_path:
-    :param develop:         Flag to init an app in "development" mode:
+    :param develop:             Flag to init an app in "development" mode:
                                 overrides debug flag from configuration,
                                 initializes Designer UI
+    :param configure_logging:   If logging settings should be re-initialized:
+                                logging is configured within CLI,
+                                but sometimes you'd want to re-initialize it explicitly,
+                                for example, when using UvicornWorker with Gunicorn
+
     :return:
     """
-    from skill_sdk import config, middleware, routes
+    from skill_sdk import config, middleware, log, routes
+
+    if configure_logging:
+        log.setup_logging()
 
     if config_path is not None:
         config.settings.Config.conf_file = config_path
@@ -252,21 +289,7 @@ def init_app(config_path: Text = None, develop: bool = None) -> Skill:
     middleware.setup_middleware(app)
     routes.setup_routes(app)
 
-    # Since Prometheus metrics exporter is optional,
-    # try to load prometheus middleware and simply eat an exception
-    try:
-        from middleware.prometheus import setup
-
-        setup(app)
-    except ModuleNotFoundError:
-        pass
-
-    if develop:
-        from skill_sdk import ui
-
-        ui.setup(app)
-
-    return app
+    return app.develop() if develop else app
 
 
 intent_handler = Skill.intent_handler

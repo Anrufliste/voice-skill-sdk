@@ -7,17 +7,17 @@
 # For details see the file LICENSE in the top directory.
 #
 
-import os
 import sys
 import pathlib
 import pkg_resources
 from argparse import Namespace
+from unittest import mock
 
 import pytest
 from pytest import CaptureFixture
 
-from skill_sdk.config import settings
-from skill_sdk.cli import import_module_app, develop, init, run, version
+from skill_sdk.__main__ import main
+from skill_sdk.cli import import_module_app, develop, init, run, version, DEFAULT_MODULE
 from skill_sdk.util import run_until_complete
 
 APP = "app:app"
@@ -26,6 +26,7 @@ APP = "app:app"
 @pytest.fixture
 def debug_logging(monkeypatch):
     from skill_sdk import log
+    from skill_sdk.config import settings
 
     monkeypatch.setattr(settings, "LOG_LEVEL", "DEBUG")
     monkeypatch.setattr(settings, "LOG_FORMAT", "human")
@@ -46,7 +47,7 @@ def change_dir(monkeypatch):
 
 
 @pytest.fixture
-def app(change_dir, monkeypatch):
+def app(change_dir):
     _, app = import_module_app(APP)
     yield app
     app.close()
@@ -86,6 +87,20 @@ def test_develop(debug_logging, mocker, app):
 
     develop.execute(Namespace(module=APP))
     uv.run.assert_called_once_with(app, port=4242)
+
+
+def test_develop_empty_project(tmpdir, mocker, monkeypatch):
+
+    uv = mocker.patch.object(develop, "uvicorn")
+    monkeypatch.chdir(tmpdir)
+
+    develop.execute(Namespace(module=DEFAULT_MODULE))
+
+    assert (tmpdir / DEFAULT_MODULE).exists()
+    uv.run.assert_called_once_with(mock.ANY, port=4242)
+
+    # Cleanup: remove imported module
+    del sys.modules["impl"]
 
 
 def test_init(tmpdir):
@@ -132,3 +147,11 @@ def test_scaffold(app):
     assert response.text == "HELLOAPP_HELLO"
 
     pytest.main(["tests"])
+
+
+def test_main(app, change_dir, mocker, monkeypatch):
+    uv = mocker.patch.object(run, "uvicorn")
+    monkeypatch.setattr("sys.argv", ["vs", "run", APP])
+    monkeypatch.setenv("LOG_FORMAT", "gelf")
+    main()
+    uv.run.assert_called_once_with(mock.ANY, port=4242)

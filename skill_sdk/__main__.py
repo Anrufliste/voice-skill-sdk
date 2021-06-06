@@ -11,7 +11,6 @@
 
 import sys
 import argparse
-import logging
 
 from skill_sdk.cli import (
     add_logging_options,
@@ -21,7 +20,6 @@ from skill_sdk.cli import (
     translate,
     version,
 )
-from skill_sdk import config, log
 
 
 def main() -> None:
@@ -30,6 +28,7 @@ def main() -> None:
 
     :return:
     """
+    from skill_sdk import log
 
     parser = argparse.ArgumentParser(
         prog="vs",
@@ -58,18 +57,11 @@ def main() -> None:
     version.add_subparser(subparsers)
 
     arguments = parser.parse_args()
-    log.setup_logging(
-        arguments.loglevel or logging.WARNING,
-        log_format=config.FormatType.HUMAN,
-    )
 
     if getattr(arguments, "command", None):
         arguments.command(arguments)
-
     else:
-        # Print usage
-        parser.print_help()
-        sys.exit(1)
+        parser.exit(-1, parser.format_help())
 
 
 if __name__ == "__main__":

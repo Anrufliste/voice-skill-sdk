@@ -3,9 +3,9 @@
     <v-row>
     <v-col cols="4">
       <v-row>
-        <v-card v-if="this.openapi.info" flat>
+        <v-card v-if="openapi.info" flat>
           <v-card-title>
-            {{ this.openapi.info.title }} v{{ this.openapi.info.version }}
+            {{ openapi.info.title }} v{{ openapi.info.version }}
             <v-tooltip bottom>
               <template v-slot:activator="{ on, attrs }">
                 <v-icon
@@ -22,7 +22,7 @@
             </v-tooltip>
           </v-card-title>
           <v-card-text>
-            <sub>{{ this.openapi.info.description }}</sub>
+            <sub>{{ openapi.info.description }}</sub>
           </v-card-text>
         </v-card>
       </v-row>
@@ -57,11 +57,6 @@
                         @change="select(intent)"
                         :rules="param.required ? rules : []"
                     ></v-text-field>
-                  </v-col>
-                  <v-col cols="2">
-                    <v-btn icon>
-                      <v-icon>mdi-plus</v-icon>
-                    </v-btn>
                   </v-col>
                 </v-row>
               </v-expansion-panel-content>
@@ -98,8 +93,8 @@
               <v-expansion-panel-content>
                 <v-row>
                   <v-row
-                      v-for="attr in session.attributes"
-                      :key="attr.key"
+                      v-for="(attr, index) in session.attributes"
+                      :key="index"
                       justify="space-around"
                   >
                     <v-col cols="3">
@@ -117,9 +112,16 @@
                       ></v-text-field>
                     </v-col>
                     <v-col cols="1">
-                      <v-btn icon>
-                        <v-icon>mdi-plus</v-icon>
-                      </v-btn>
+                      <v-tooltip bottom>
+                        <template v-slot:activator="{ on, attrs }">
+                          <v-btn icon @click.stop="session.attributes.splice(index, 1)"
+                                 v-bind="attrs"
+                                 v-on="on"
+                          > <v-icon>mdi-minus-circle</v-icon>
+                          </v-btn>
+                        </template>
+                        <span>Remove attribute</span>
+                      </v-tooltip>
                     </v-col>
                   </v-row>
                   <v-row
@@ -142,6 +144,18 @@
                       ></v-checkbox>
                     </v-col>
                     <v-col cols="1">
+                      <v-tooltip bottom>
+                        <template v-slot:activator="{ on, attrs }">
+                          <v-btn icon @click="session.attributes.push({key: 'attr-' + (session.attributes.length + 1),
+                                          value: 'value-' + (session.attributes.length + 1)})"
+                                 v-bind="attrs"
+                                 v-on="on"
+                          >
+                            <v-icon>mdi-plus-circle</v-icon>
+                          </v-btn>
+                        </template>
+                        <span>Add attribute</span>
+                      </v-tooltip>
                     </v-col>
                   </v-row>
                 </v-row>
@@ -202,9 +216,14 @@
 
 export default {
 
+  props: {
+    openapi: Object,
+    intents: Array,
+    log: String,
+  },
+
   data: () => ({
-      openapi: {},
-      intents: {},
+      spiVersion: "1.4.1",
       session: {
         id: 123,
         new: true,
@@ -215,8 +234,6 @@ export default {
       },
       request: "{}",
       response: "",
-      connection: null,
-      log: "",
       intentsPanel: null,
       rules: [
           value => !!value || "Field required!",
@@ -226,12 +243,6 @@ export default {
               || "Non-blank value required!" ,
       ],
   }),
-
-  created: function() {
-      this.getAPIDescription();
-      this.getIntents();
-      this.connectLogs();
-  },
 
   methods: {
       validate(input) {
@@ -294,7 +305,7 @@ export default {
             attributes: Object.fromEntries(this.session.attributes.map(e => [e.key, e.value])),
             new: this.session.new,
           },
-          spiVersion: 1.2,
+          spiVersion: this.spiVersion,
         }, null, 2)
       },
       info() {
@@ -303,38 +314,11 @@ export default {
             k => paths[k]["get"] && paths[k]["get"].summary.endsWith("Info")
         )[0]
         this.axios.get('http://localhost:4242' + p).then(
-            r => this.response = JSON.stringify(r.data, null, 2)
+            r => {
+              this.response = JSON.stringify(r.data, null, 2);
+            }
         ).catch(err => this.response = err)
       },
-      getIntents() {
-          const uri = 'http://localhost:4242/intents'
-          this.axios.get(uri).then(
-              r => this.intents = r.data
-          )
-      },
-      getAPIDescription() {
-          const uri = 'http://localhost:4242/openapi.json'
-          this.axios.get(uri).then(
-              r => this.openapi = r.data
-          )
-      },
-      connectLogs() {
-
-          this.connection = new WebSocket("ws://localhost:4242/logs");
-
-          const self = this
-          this.connection.onmessage = function(event) {
-            const container = document.getElementById ( "log" )
-            container.scrollTop = container.scrollHeight
-            self.log += JSON.parse(event.data).msg + "\n"
-          }
-
-          this.connection.onopen = function(event) {
-            console.log(event)
-            console.log("Successfully connected to the logs server...")
-          }
-      },
-
   }
 };
 </script>

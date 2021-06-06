@@ -18,11 +18,12 @@
 
 import argparse
 import logging
+import pathlib
 from contextlib import closing
 
 import uvicorn
 
-from skill_sdk.cli import import_module_app
+from skill_sdk.cli import import_module_app, DEFAULT_MODULE
 
 logger = logging.getLogger(__name__)
 
@@ -39,26 +40,45 @@ def execute(arguments):
     :param arguments:
     :return:
     """
-    from skill_sdk import config, log, skill
+    from skill_sdk import config, log
 
-    log.setup_logging(logging.DEBUG, config.FormatType.HUMAN)
-
-    module_str, _, app_str = arguments.module.partition(":")
     config.settings.SKILL_DEBUG = True
 
+    # Set default log level to DEBUG, if not explicitly overridden with "--verbose"/"--quiet"
+    loglevel = getattr(arguments, "loglevel", None) or logging.DEBUG
+    log.setup_logging(loglevel, config.FormatType.HUMAN)
+
+    if arguments.module == DEFAULT_MODULE:
+        create_if_missing(arguments.module)
+
     module, app = import_module_app(arguments.module)
-    if app is None:
-        app = skill.init_app()
 
     logger.info("Loaded app: %s", repr(app))
     logger.info("Loaded handlers: %s", list(app.intents))
 
     run_config = config.settings.http_config()
-
     logger.info("Starting app with config: %s", repr(run_config))
 
     with closing(app):
         uvicorn.run(app, **run_config)
+
+
+def create_if_missing(module) -> None:
+    """
+    When `vs develop` is called from an empty project,
+    "impl" folder does not exist and "import_module_app" fails with ModuleNotFoundError.
+
+        We'll double check if "impl"/"impl.py" is missing and create an empty folder.
+
+    :param module:
+    :return:
+    """
+    module_path = pathlib.Path.cwd() / module
+    if module_path.exists() or module_path.with_suffix(".py").exists():
+        return
+
+    logger.debug("Creating modules folder %s...", module_path)
+    module_path.mkdir()
 
 
 def add_subparser(subparsers):
@@ -74,5 +94,7 @@ def add_subparser(subparsers):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         help="Starts the skill in development mode.",
     )
-    run_parser.add_argument("module", help="Run module", nargs="?", default="impl")
+    run_parser.add_argument(
+        "module", help="Run module", nargs="?", default=DEFAULT_MODULE
+    )
     run_parser.set_defaults(command=execute)
