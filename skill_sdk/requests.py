@@ -17,8 +17,7 @@ import httpx
 from httpx import codes, HTTPError, Response  # noqa
 
 from aiobreaker import (
-    CircuitBreaker,
-    CircuitBreakerState,  # noqa
+    CircuitBreaker # noqa
 )
 
 from skill_sdk.config import settings
