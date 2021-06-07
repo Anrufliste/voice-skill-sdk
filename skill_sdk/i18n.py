@@ -34,6 +34,9 @@ PROGRAM_NOT_FOUND = f'Failed to launch "{PROGRAM} %s": not found. Make sure "{PR
 
 RE_TRANSLATIONS = re.compile(r"^[a-z]{2}(-[A-Z]{2})?$")
 
+MESSAGE_KEY_SEPARATORS = [" ", ".", ";", ",", "!", "?", "|"]
+MESSAGE_KEY_DEFAULT_SEPARATOR = " "
+
 logger = logging.getLogger(__name__)
 
 
@@ -79,10 +82,6 @@ class TranslationError(Exception):
     Exception raised when a translation could not be performed due to a missing ``.mo`` file, a missing translation
     key or if there are no suitable translations available in the text service.
     """
-
-
-MESSAGE_KEY_SEPARATORS = [" ", ".", ";", ",", "!", "?", "|"]
-MESSAGE_KEY_DEFAULT_SEPARATOR = " "
 
 
 class Message(str):
