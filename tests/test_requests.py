@@ -19,11 +19,10 @@ from skill_sdk.requests import (
     Client,
     AsyncClient,
     CircuitBreaker,
-    CircuitBreakerState,
     HTTPError,
     DEFAULT_REQUESTS_TIMEOUT,
 )
-
+from aiobreaker import CircuitBreakerState
 
 LOCALHOST = "http://localhost/"
 
