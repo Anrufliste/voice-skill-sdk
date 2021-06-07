@@ -16,9 +16,7 @@ from warnings import warn
 import httpx
 from httpx import codes, HTTPError, Response  # noqa
 
-from aiobreaker import (
-    CircuitBreaker # noqa
-)
+from aiobreaker import CircuitBreaker  # noqa
 
 from skill_sdk.config import settings
 from skill_sdk.log import tracing_headers

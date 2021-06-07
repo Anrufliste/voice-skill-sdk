@@ -130,7 +130,10 @@ class Message(str):
         """
         Concatenating messages keys while maintaining their readability
         """
-        if key_first[-1] in MESSAGE_KEY_SEPARATORS or key_second[0] in MESSAGE_KEY_SEPARATORS:
+        if (
+            key_first[-1] in MESSAGE_KEY_SEPARATORS
+            or key_second[0] in MESSAGE_KEY_SEPARATORS
+        ):
             return key_first + key_second
         return key_first + MESSAGE_KEY_DEFAULT_SEPARATOR + key_second
 
