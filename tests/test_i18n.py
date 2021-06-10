@@ -343,6 +343,7 @@ class TestMessage(unittest.TestCase):
         self.assertEqual("1", m)
         self.assertEqual("1", m.key)
 
+
 class TestTranslations(unittest.TestCase):
     @patch("subprocess.check_output")
     @patch("pathlib.io.open", mock_open(read_data=EMPTY_MO_DATA), create=True)
