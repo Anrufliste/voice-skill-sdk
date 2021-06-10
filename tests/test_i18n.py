@@ -335,6 +335,13 @@ class TestMessage(unittest.TestCase):
         with self.assertRaises(TypeError):
             Message("1") + 1
 
+        m = Message("1") + ""
+        self.assertEqual("1", m)
+        self.assertEqual("1", m.key)
+
+        m = Message("") + "1"
+        self.assertEqual("1", m)
+        self.assertEqual("1", m.key)
 
 class TestTranslations(unittest.TestCase):
     @patch("subprocess.check_output")
