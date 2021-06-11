@@ -309,10 +309,10 @@ class TestMessage(unittest.TestCase):
     def test_add(self):
         m = Message("1") + " " + Message("2")
         self.assertEqual("1 2", m)
-        self.assertEqual("1 \" \" 2", m.key)
+        self.assertEqual('1 " " 2', m.key)
         m = Message("1") + " " + "2"
         self.assertEqual("1 2", m)
-        self.assertEqual("1 \" \" \"2\"", m.key)
+        self.assertEqual('1 " " "2"', m.key)
         m = "1" + " " + Message("2")
         self.assertEqual("1 2", m)
         self.assertIsInstance(m, str)
@@ -326,11 +326,11 @@ class TestMessage(unittest.TestCase):
 
         m = Message("MYTAG1") + "some text" + Message("MYTAG2")
         self.assertEqual("MYTAG1some textMYTAG2", m)
-        self.assertEqual("MYTAG1 \"some text\" MYTAG2", m.key)
+        self.assertEqual('MYTAG1 "some text" MYTAG2', m.key)
 
         m = Message("MYTAG1") + " some text " + Message("MYTAG2")
         self.assertEqual("MYTAG1 some text MYTAG2", m)
-        self.assertEqual("MYTAG1 \" some text \" MYTAG2", m.key)
+        self.assertEqual('MYTAG1 " some text " MYTAG2', m.key)
 
         with self.assertRaises(TypeError):
             Message("1") + 1
@@ -341,7 +341,7 @@ class TestMessage(unittest.TestCase):
 
         m = Message("") + "1"
         self.assertEqual("1", m)
-        self.assertEqual("\"1\"", m.key)
+        self.assertEqual('"1"', m.key)
 
 
 class TestTranslations(unittest.TestCase):
