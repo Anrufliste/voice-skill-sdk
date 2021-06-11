@@ -81,7 +81,6 @@ class TranslationError(Exception):
     """
 
 
-MESSAGE_KEY_SEPARATORS = [" ", ".", ";", ",", "!", "?", "|"]
 MESSAGE_KEY_DEFAULT_SEPARATOR = " "
 
 
@@ -131,10 +130,6 @@ class Message(str):
     def _adding_keys(key_first: str, key_second: str) -> str:
         """
         Concatenating messages keys while maintaining their readability
-        If there is no separator character at any of the ends which will be directly connected,
-        the default one will be added in between.
-        If both have a separator, readability is save and there is no removing.
-        If one does not have charachters at all, there is also no need to add one.
         """
         if len(key_first) == 0:
             return key_second
@@ -142,11 +137,6 @@ class Message(str):
         if len(key_second) == 0:
             return key_first
 
-        if (
-            key_first[-1] in MESSAGE_KEY_SEPARATORS
-            or key_second[0] in MESSAGE_KEY_SEPARATORS
-        ):
-            return key_first + key_second
         return key_first + MESSAGE_KEY_DEFAULT_SEPARATOR + key_second
 
     def __add__(self, other: Union["Message", Text]) -> "Message":
@@ -163,7 +153,8 @@ class Message(str):
             kwargs = {**self.kwargs, **other.kwargs}
         else:
             value = self.value + other
-            key = self._adding_keys(self.key, other)
+            other_key = '"'+ other + '"' if len(other) > 0 else ""
+            key = self._adding_keys(self.key, other_key)
             args, kwargs = self.args, self.kwargs
 
         return Message(value, key, *args, **kwargs)
