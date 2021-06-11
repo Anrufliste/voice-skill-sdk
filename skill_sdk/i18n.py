@@ -153,7 +153,7 @@ class Message(str):
             kwargs = {**self.kwargs, **other.kwargs}
         else:
             value = self.value + other
-            other_key = '"'+ other + '"' if len(other) > 0 else ""
+            other_key = '"' + other + '"' if len(other) > 0 else ""
             key = self._adding_keys(self.key, other_key)
             args, kwargs = self.args, self.kwargs
 
